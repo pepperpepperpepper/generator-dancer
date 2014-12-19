@@ -1,0 +1,5 @@
+{
+	"name": "<%= _.slugify(options.site_name) %>",
+	"description": "<%= options.site_description %>",
+	"private": true
+}
