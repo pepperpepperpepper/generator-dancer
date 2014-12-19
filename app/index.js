@@ -8,8 +8,7 @@ var play_ascii = require('./play_ascii');
 var custom_template = require('./custom_template');
 var custom_npmInstall = require('./custom_npmInstall');
 var custom_bowerInstall = require('./custom_bowerInstall');
-//var bower_linker = require('./bower_linker.js');
-console.log('running script');
+var bower_linker = require('./bower_linker.js');
 
 var fs = require('fs');
 
@@ -21,12 +20,13 @@ module.exports = generators.Base.extend({
     //event listeners go here
     generators.Base.apply(this, arguments);
     
+    this._source = this.sourceRoot();
+    this._destination = this.destinationRoot();
     //I had to over-write the template function to be async...
-    this.template = custom_template(this.sourceRoot(), this.destinationRoot());
-    
+    this.template = custom_template(this._source, this._destination);
     //npm install and bower install did not work async as either. What gives!
-    this.npmInstall = custom_npmInstall(this.sourceRoot(), this.destinationRoot());
-    this.bowerInstall = custom_bowerInstall(this.sourceRoot(), this.destinationRoot());
+    this.npmInstall = custom_npmInstall
+    this.bowerInstall = custom_bowerInstall
 
     this.on('end', function () {
       this.spawnCommand('grunt');
@@ -56,7 +56,9 @@ module.exports = generators.Base.extend({
      ];
      //}}}
      this.prompt(prompts, function (props) {
-       console.log(props)
+       if (typeof props.site_name === 'undefined' || ! props.site_name ){
+         props.site_name = 'No Name';
+       }
        _.extend(this.options, props);
        
        async.waterfall([
@@ -69,10 +71,11 @@ module.exports = generators.Base.extend({
          function gruntfile_tpl(gruntfile_tpl_callback){
            that.template('_Gruntfile.js', 'Gruntfile.js', that, function() { gruntfile_tpl_callback(null) } );
          },
+         function gitignore_tpl(gitignore_tpl_callback){
+           that.template('_gitignore', '.gitignore', that, function() { gitignore_tpl_callback(null) } );
+         },
        ], function (err, result) {
           if (err) throw 'unable to make templates';
-          
-          that.bowerInstall('jquery', { 'saveDev' : true }, function(){ console.log('in this goddamn callback' ); console.log('fucking a') ; process.exit() } );
           done();
        }); 
      }.bind(this));
@@ -136,20 +139,9 @@ module.exports = generators.Base.extend({
        props.features.forEach(function(feature){ 
          this.options.js[feature] = true;
        }.bind(this))
-//       this.bowerInstall( [ 'jquery-ui' ]);
-//       console.log('prompting for js');
-//       console.log('props.features')
-//       console.log(props.features)
-//       that.bowerInstall(props.features, { 'saveDev' : true }, function(){ console.log('in this goddamn callback' ); console.log('fucking a') } );
-//       that.bowerInstall(['jquery'], { 'saveDev' : true }, function(){ console.log('in this goddamn callback' ); console.log('fucking a') } );
-         done();
+       this.bowerInstall(props.features, function(){ console.log(""), done() });
      }.bind(this));
   },
-  installJS: function(){
-    var done = this.async();
-    this.npmInstall(['underscore'], done );
-  },
-  
   promptCSS: function() {
      var done = this.async();
      //{{{ prompt opts
@@ -193,7 +185,7 @@ module.exports = generators.Base.extend({
        props.features.forEach(function(feature){ 
          this.options.css[feature] = true;
        }.bind(this))
-       this.bowerInstall(props.features, { 'saveDev' : true }, done);
+       this.bowerInstall(props.features, done);
      }.bind(this));
   },
   buildGruntfile: function(){
@@ -203,13 +195,12 @@ module.exports = generators.Base.extend({
        'grunt-contrib-watch',
        'grunt-contrib-concat',
        'grunt-contrib-uglify',
+       'grunt-contrib-jshint',
        'grunt-contrib-cssmin',
 //      'grunt-contrib-clean',
        'grunt-dancer', 
      ]
-     this.template('_Gruntfile.js', 'Gruntfile.js');
-     this.npmInstall(npmLibs, { 'saveDev' : true }, done);
-     
+     this.npmInstall(npmLibs, done);
   },
   
   buildDancer: function(){
@@ -240,7 +231,7 @@ module.exports = generators.Base.extend({
          });
        },
        function mkdir_templates(mkdir_templates_callback){
-         child_process.exec('mkdir -p templates/layouts', function(error, stdout, stderr){
+         child_process.exec('mkdir -p views/layouts', function(error, stdout, stderr){
            if(error){
              console.log("ERROR: error building dancer");
              console.log("ERROR: "+error.toString());
@@ -250,29 +241,38 @@ module.exports = generators.Base.extend({
            mkdir_templates_callback(null);
          });
        },
-       function add_templates(){
+       function add_templates(add_templates_callback){
          var templateSettings = {
               'evaluate'    : /\{\{(.+?)\}\}/g,
               'interpolate'    : /\{\{=(.+?)\}\}/g,
               'escape'    : /\{\{-(.+?)\}\}/g,
           };
-         console.log('this is that.options')
-         that.template('dancer/templates/index.tt', 'templates/layouts/index.tt', that, templateSettings); 
-         that.template('dancer/templates/layouts/main.tt', 'templates/layouts/main.tt', that, templateSettings); 
-         done();
+         
+         async.waterfall([
+           function main_tpl(main_tpl_callback){
+             that.template('dancer/views/layouts/main.tt', 'views/layouts/main.tt', that, templateSettings, function(){ main_tpl_callback(null) } ); 
+           },
+           function index_tpl(index_tpl_callback){
+             that.template('dancer/views/index.tt', 'views/index.tt', that, templateSettings, function(){ index_tpl_callback(null) } ); 
+           },
+         ], function (err, result) {
+            if (err) throw 'unable to make templates';
+            add_templates_callback(null);
+         }); 
        },
      ], function (error, result) {
         if(error){
           console.log("ERROR: error building dancer");
           console.log("ERROR: "+error.toString());
-          done();
+          process.exit();
         }
+        done();
      }) 
   }, 
-//  linkBower: function(){
-//    var done = this.async();
-//    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), done);
-//  },
+  linkBower: function(){
+    var done = this.async();
+    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), done);
+  },
   check: function () {
     console.log(this.options);
   },

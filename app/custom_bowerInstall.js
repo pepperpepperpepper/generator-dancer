@@ -8,5 +8,6 @@ module.exports = test = function(package_array, callback){
     .install(package_array, { save: true, forceLatest: true }, { /* custom config */ })
     .on('end', function (installed) {
       console.log(installed);
+      callback();
     });
 }

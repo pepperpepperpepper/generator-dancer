@@ -6,7 +6,7 @@ module.exports = function(grunt) {
     jshint: {
       src: [
         'Gruntfile.js',
-        '/static/js/**.js',
+        '/static/js/**/*.js',
       ],
       filter: function(filepath){
         return !(filepath.match(/vendor/));
@@ -27,11 +27,11 @@ module.exports = function(grunt) {
     },
     concat: {
       js: {
-        src: ['static/vendor/**.js'],
+        src: ['static/vendor/**/*.js'],
         dest: 'static/js/vendor.js',
       },
       css: {
-        src: ['static/vendor/**.css']
+        src: ['static/vendor/**/*.css'],
         dest: 'static/css/vendor.css',
       },
     },
@@ -59,7 +59,7 @@ module.exports = function(grunt) {
         },
         files: [
           'bin/app.pl',
-          'templates/**.tt',
+          'templates/**/*.tt',
         ],
         tasks: ['dancer']
       },
@@ -68,7 +68,7 @@ module.exports = function(grunt) {
           livereload : true, 
         },
         files: [
-          '/static/js/**.js',
+          '/static/js/**/*.js',
         ],
         filter: function(filepath){
           return !(filepath.match(/vendor/));
@@ -79,8 +79,8 @@ module.exports = function(grunt) {
           livereload : true, 
         },
         files: [
-          '/static/**.html',
-          'templates/**.tt',
+          '/static/**/*.html',
+          'templates/**/*.tt',
         ],
         filter: function(filepath){
           return !(filepath.match(/vendor/));
@@ -91,7 +91,7 @@ module.exports = function(grunt) {
           livereload : true, 
         },
         files: [
-          '/static/css/**.css',
+          '/static/css/**/*.css',
         ],
         filter: function(filepath){
           return !(filepath.match(/vendor/));
@@ -102,7 +102,7 @@ module.exports = function(grunt) {
           livereload : true, 
         },
         files: [
-          '/static/vendor/**.css', '/static/vendor/**.js'
+          '/static/vendor/**/*.css', '/static/vendor/**/*.js'
         ],
         tasks: ['concat', 'uglify:vendor', 'cssmin'], 
       }
@@ -110,15 +110,12 @@ module.exports = function(grunt) {
 
   });
 
-  // Actually load this plugin's task(s).
-  grunt.loadTasks('tasks');
-
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-dancer');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-uglifiy');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.registerTask('default', ['dancer', 'concat', 'uglify:vendor', 'cssmin', 'watch']);
 
