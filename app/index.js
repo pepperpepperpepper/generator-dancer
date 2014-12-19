@@ -5,9 +5,14 @@ var _s = require('underscore.string');
 var child_process = require('child_process');
 var async = require('async');
 var play_ascii = require('./play_ascii');
-var bower_linker = require('./bower_linker.js');
+var custom_template = require('./custom_template');
+var custom_npmInstall = require('./custom_npmInstall');
+var custom_bowerInstall = require('./custom_bowerInstall');
+//var bower_linker = require('./bower_linker.js');
+console.log('running script');
 
 var fs = require('fs');
+
 
 module.exports = generators.Base.extend({
   // The name `constructor` is important here
@@ -15,6 +20,13 @@ module.exports = generators.Base.extend({
     // this is called at initialization, that's why you have generators.Base.apply
     //event listeners go here
     generators.Base.apply(this, arguments);
+    
+    //I had to over-write the template function to be async...
+    this.template = custom_template(this.sourceRoot(), this.destinationRoot());
+    
+    //npm install and bower install did not work async as either. What gives!
+    this.npmInstall = custom_npmInstall(this.sourceRoot(), this.destinationRoot());
+    this.bowerInstall = custom_bowerInstall(this.sourceRoot(), this.destinationRoot());
 
     this.on('end', function () {
       this.spawnCommand('grunt');
@@ -29,7 +41,9 @@ module.exports = generators.Base.extend({
   },
   promptSiteConfig: function() {
      var done = this.async();
-     //{{{prompt-opts
+     var that = this;
+     //
+//{{{prompt-opts
      var prompts = [
        {
            name: 'site_name',
@@ -44,15 +58,28 @@ module.exports = generators.Base.extend({
      this.prompt(prompts, function (props) {
        console.log(props)
        _.extend(this.options, props);
-      this.template('_package.json', 'package.json');
-      this.template('_bower.json', 'bower.json');
-      this.template('_Gruntfile.js', 'Gruntfile.js');
-
-      done();
+       
+       async.waterfall([
+         function pj_tpl(pj_tpl_callback){
+           that.template('_package.json', 'package.json', that, function() { pj_tpl_callback(null) } );
+         },
+         function bower_tpl(bower_tpl_callback){
+           that.template('_bower.json', 'bower.json', that, function() { bower_tpl_callback(null) } );
+         },
+         function gruntfile_tpl(gruntfile_tpl_callback){
+           that.template('_Gruntfile.js', 'Gruntfile.js', that, function() { gruntfile_tpl_callback(null) } );
+         },
+       ], function (err, result) {
+          if (err) throw 'unable to make templates';
+          
+          that.bowerInstall('jquery', { 'saveDev' : true }, function(){ console.log('in this goddamn callback' ); console.log('fucking a') ; process.exit() } );
+          done();
+       }); 
      }.bind(this));
   },
   promptJS: function() {
      var done = this.async();
+     var that = this;
      //{{{ prompt-opts
      var prompts = [
        {
@@ -109,11 +136,20 @@ module.exports = generators.Base.extend({
        props.features.forEach(function(feature){ 
          this.options.js[feature] = true;
        }.bind(this))
-//pb       this.bowerInstall(props.features, { 'saveDev' : true });
-       //create symlinks to static/js/vendor here
-       done();
+//       this.bowerInstall( [ 'jquery-ui' ]);
+//       console.log('prompting for js');
+//       console.log('props.features')
+//       console.log(props.features)
+//       that.bowerInstall(props.features, { 'saveDev' : true }, function(){ console.log('in this goddamn callback' ); console.log('fucking a') } );
+//       that.bowerInstall(['jquery'], { 'saveDev' : true }, function(){ console.log('in this goddamn callback' ); console.log('fucking a') } );
+         done();
      }.bind(this));
   },
+  installJS: function(){
+    var done = this.async();
+    this.npmInstall(['underscore'], done );
+  },
+  
   promptCSS: function() {
      var done = this.async();
      //{{{ prompt opts
@@ -157,9 +193,7 @@ module.exports = generators.Base.extend({
        props.features.forEach(function(feature){ 
          this.options.css[feature] = true;
        }.bind(this))
-//pb       this.bowerInstall(props.features, { 'saveDev' : true });
-       //create symlinks to static/js/vendor here
-       done();
+       this.bowerInstall(props.features, { 'saveDev' : true }, done);
      }.bind(this));
   },
   buildGruntfile: function(){
@@ -173,10 +207,9 @@ module.exports = generators.Base.extend({
 //      'grunt-contrib-clean',
        'grunt-dancer', 
      ]
-//pb     this.npmInstall(npmLibs, { 'saveDev' : true });
-     
      this.template('_Gruntfile.js', 'Gruntfile.js');
-     done();
+     this.npmInstall(npmLibs, { 'saveDev' : true }, done);
+     
   },
   
   buildDancer: function(){
@@ -236,10 +269,10 @@ module.exports = generators.Base.extend({
         }
      }) 
   }, 
-  linkBower: function(){
-    var done = this.async();
-    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), done);
-  },
+//  linkBower: function(){
+//    var done = this.async();
+//    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), done);
+//  },
   check: function () {
     console.log(this.options);
   },
