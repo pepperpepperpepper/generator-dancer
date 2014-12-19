@@ -28,9 +28,6 @@ module.exports = generators.Base.extend({
     this.npmInstall = custom_npmInstall
     this.bowerInstall = custom_bowerInstall
 
-    this.on('end', function () {
-      this.spawnCommand('grunt');
-    });
     this.options = {};
 //    this.pkg = JSON.parse(this.readFileAsString(path.join(__dirname, '../package.json')));
      // have Yeoman greet the user
@@ -241,6 +238,28 @@ module.exports = generators.Base.extend({
            mkdir_templates_callback(null);
          });
        },
+       function mkdir_css(mkdir_css_callback){
+         child_process.exec('mkdir -p static/css', function(error, stdout, stderr){
+           if(error){
+             console.log("ERROR: error building dancer");
+             console.log("ERROR: "+error.toString());
+           }
+           console.log(stdout);
+           console.log(stderr);
+           mkdir_css_callback(null);
+         });
+       },
+       function mkdir_js(mkdir_js_callback){
+         child_process.exec('mkdir -p static/js', function(error, stdout, stderr){
+           if(error){
+             console.log("ERROR: error building dancer");
+             console.log("ERROR: "+error.toString());
+           }
+           console.log(stdout);
+           console.log(stderr);
+           mkdir_js_callback(null);
+         });
+       },
        function add_templates(add_templates_callback){
          var templateSettings = {
               'evaluate'    : /\{\{(.+?)\}\}/g,
@@ -254,6 +273,12 @@ module.exports = generators.Base.extend({
            },
            function index_tpl(index_tpl_callback){
              that.template('dancer/views/index.tt', 'views/index.tt', that, templateSettings, function(){ index_tpl_callback(null) } ); 
+           },
+           function mainjs_tpl(mainjs_tpl_callback){
+             that.template('_main.js', 'static/js/main.js', that, templateSettings, function(){ mainjs_tpl_callback(null) } ); 
+           },
+           function stylecss_tpl(stylecss_tpl_callback){
+             that.template('_style.css', 'static/css/style.css', that, templateSettings, function(){ stylecss_tpl_callback(null) } ); 
            },
          ], function (err, result) {
             if (err) throw 'unable to make templates';
@@ -271,7 +296,8 @@ module.exports = generators.Base.extend({
   }, 
   linkBower: function(){
     var done = this.async();
-    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), done);
+    console.log('linking bower...');
+    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), function(){ console.log(' linked successfully' ), done()} );
   },
   check: function () {
     console.log(this.options);

@@ -48,8 +48,10 @@ module.exports = function(grunt) {
     cssmin : {
       options: {
       },
-      files: {
-        'static/css/vendor.min.css' : [ 'static/css/vendor.css' ]
+      vendor : {
+        files: {
+          'static/css/vendor.min.css' : [ 'static/css/vendor.css' ]
+        }
       }
     }, 
     watch: {
@@ -104,7 +106,7 @@ module.exports = function(grunt) {
         files: [
           '/static/vendor/**/*.css', '/static/vendor/**/*.js'
         ],
-        tasks: ['concat', 'uglify:vendor', 'cssmin'], 
+        tasks: ['concat', 'uglify:vendor', 'cssmin:vendor'], 
       }
     },
 
@@ -117,7 +119,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
-  grunt.registerTask('default', ['dancer', 'concat', 'uglify:vendor', 'cssmin', 'watch']);
+  grunt.registerTask('default', ['dancer', 'concat', 'uglify:vendor', 'cssmin:vendor', 'watch']);
 
 };
 
