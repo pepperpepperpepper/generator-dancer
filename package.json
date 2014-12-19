@@ -1,8 +1,19 @@
 {
   "name": "generator-dancer",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Cool yeoman generator for rapid prototyping using perl Dancer as backend",
   "main": "",
+  "keywords": [
+    "yeoman-generator",
+    "scaffold",
+    "fullstack",
+    "framework",
+    "component",
+    "front-end",
+    "perl",
+    "dancer",
+    "app"
+  ],
   "dependencies": {
     "async": "^0.9.0",
     "bower": "^1.3.12",
@@ -21,10 +32,18 @@
     "type": "git",
     "url": "https://github.com/pepperpepperpepper/generator-dancer.git"
   },
-  "author": "pepper",
+  "author": {
+    "name": "pepper"
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/pepperpepperpepper/generator-dancer/issues"
   },
-  "homepage": "https://github.com/pepperpepperpepper/generator-dancer"
+  "homepage": "https://github.com/pepperpepperpepper/generator-dancer",
+  "readme": "<img src=\"http://i.imgur.com/6soykMs.png\" />\n\nA work in progress...starts a barebones dancer server with yeoman.\n\nshell\n```\n$> npm install generator-dancer\n$> yo dancer\n```\n",
+  "readmeFilename": "README.md",
+  "gitHead": "fea4cefed88566c70dfb50d500d98bac6a0f8f31",
+  "_id": "generator-dancer@1.0.1",
+  "_shasum": "97c48ae577dc0def380f50d0fd8d10e65b1823cc",
+  "_from": "generator-dancer@*"
 }
