@@ -93,16 +93,6 @@ module.exports = generators.Base.extend({
              checked: false
            }, 
            {
-             name: 'AMD via Require.js',
-             value: 'requirejs',
-             checked: false
-           },
-           {
-             name: 'Browserify',
-             value: 'browserify',
-             checked: false
-           },
-           {
              name: 'jquery-ui',
              value: 'jqueryui',
              checked: false
@@ -159,18 +149,13 @@ module.exports = generators.Base.extend({
              checked: false
            },
            {
-             name: 'bootstrap',
-             value: 'bootstrap',
+             name: 'bootstrap-css',
+             value: 'bootstrap-css',
              checked: false
            },
            {
              name: 'jquery-ui',
              value: 'jqueryui',
-             checked: false
-           }, 
-           {
-             name: 'threejs',
-             value: 'threejs',
              checked: false
            }, 
          ]
@@ -280,6 +265,12 @@ module.exports = generators.Base.extend({
            function stylecss_tpl(stylecss_tpl_callback){
              that.template('_style.css', 'static/css/style.css', that, templateSettings, function(){ stylecss_tpl_callback(null) } ); 
            },
+           function err404_tpl(err404_tpl_callback){
+             that.template('dancer/static/404.html', 'static/404.html', that, templateSettings, function(){ err404_tpl_callback(null) } ); 
+           },
+           function err500_tpl(err500_tpl_callback){
+             that.template('dancer/static/500.html', 'static/500.html', that, templateSettings, function(){ err500_tpl_callback(null) } ); 
+           },
          ], function (err, result) {
             if (err) throw 'unable to make templates';
             add_templates_callback(null);
@@ -301,5 +292,7 @@ module.exports = generators.Base.extend({
   },
   check: function () {
     console.log(this.options);
+    console.log("Installation Finished:")
+    console.log("Try Running grunt to start the dancer development server, etc");
   },
 });
