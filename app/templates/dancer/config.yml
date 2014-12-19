@@ -6,7 +6,6 @@
 appname: "appname"
 
 public: "static"
-views: "templates"
 # The default layout to use for your application 
 layout: "main"
 
