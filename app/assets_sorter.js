@@ -32,7 +32,7 @@ function _js_score(path){
   return 1000;
 }
 
-module.exports.sort_js function(arr){
+module.exports.sort_js = function(arr){
   return arr.sort(function(a,b){
     return _js_score(a) - _js_score(b);
   })
