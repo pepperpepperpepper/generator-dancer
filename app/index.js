@@ -9,6 +9,7 @@ var custom_template = require('./custom_template');
 var custom_npmInstall = require('./custom_npmInstall');
 var custom_bowerInstall = require('./custom_bowerInstall');
 var bower_linker = require('./bower_linker.js');
+var assets_sorter = require('./assets_sorter.js');
 
 var fs = require('fs');
 
