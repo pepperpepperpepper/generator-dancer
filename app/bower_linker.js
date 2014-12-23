@@ -8,6 +8,7 @@ var child_process = require('child_process');
 var bower_conf;
 var test;
 var debug = false;
+var links = {};
 
 function _mkdir(path, cb){
   if (! path) return cb();
@@ -49,7 +50,7 @@ function _make_link(file, subdir, cb){
     var target = path.join(subdir, file.name);
     if(debug) console.log('Creating link...', file.path, target);
     _clear_target(target, function() { 
-      fs.symlink(file.path, target, cb) ;
+      fs.symlink(file.path, target, function(){ cb(target) ;}) ;
     });
   });
 }
@@ -91,15 +92,20 @@ module.exports = test = function(destination, final_callback){
       if (debug) console.log('linking files...');
       async.each(files_to_link, function(file, each_callback) {
         if (/(?:(?:\/js\/))|(?:\.js)/gi.exec(file.path)){
-           _make_link(file, path.join(destination, 'js'), each_callback);
+           if (typeof links.js === 'undefined') { links.js = [] }; 
+           _make_link(file, path.join(destination, 'js'), function(p){ links.js.push(p); each_callback(); });
         }else if(/(?:(?:\/css\/))|(?:\.css)/gi.exec(file.path)){
-           _make_link(file, path.join(destination, 'css'), each_callback);
+           if (typeof links.css === 'undefined') { links.css = [] };
+           _make_link(file, path.join(destination, 'css'), function(p){ links.css.push(p); each_callback(); });
         }else if(/(?:(?:\/fonts?\/))|(?:\.(?:wof)|(?:svg)|(?:eot)|(?:ttf)$)/ig.exec(file.path)){
-           _make_link(file, path.join(destination, 'fonts'), each_callback);
+           if (typeof links.fonts === 'undefined') { links.fonts = [] }; 
+           _make_link(file, path.join(destination, 'fonts'), function(p){ links.fonts.push(p); each_callback(); });
         }else if(/\.less$/i.exec(file.path)){
-           _make_link(file, path.join(destination, 'less'), each_callback);
+           if (typeof links.less === 'undefined') { links.less = [] };
+           _make_link(file, path.join(destination, 'less'), function(p){ links.less.push(p); each_callback(); });
         }else{
-           _make_link(file, path.join(destination, ''), each_callback);
+           if (typeof links.other === 'undefined') { links.other = [] };
+           _make_link(file, path.join(destination, ''), function(p){ links.other.push(p); each_callback() });
         }
       }, function(err){
           if( err ) {
@@ -112,6 +118,7 @@ module.exports = test = function(destination, final_callback){
             return process.exit(1);
           } else {
             if (debug) console.log('All files have been processed successfully');
+            console.log(links);
             return link_files_cb(null);
           }
       });
@@ -124,7 +131,7 @@ module.exports = test = function(destination, final_callback){
         process.exit(1);
       }
 
-      final_callback();
+      final_callback(links);
     }
   );
 
