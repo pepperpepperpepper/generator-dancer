@@ -27,7 +27,7 @@ module.exports = function(grunt) {
     },
     concat: {
       js: {
-        src: ['static/vendor/**/*.js'],
+        src: '{{= js }}', 
         dest: 'static/js/vendor.js',
       },
       css: {

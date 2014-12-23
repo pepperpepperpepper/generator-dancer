@@ -66,9 +66,6 @@ module.exports = generators.Base.extend({
          function bower_tpl(bower_tpl_callback){
            that.template('_bower.json', 'bower.json', that, function() { bower_tpl_callback(null) } );
          },
-         function gruntfile_tpl(gruntfile_tpl_callback){
-           that.template('_Gruntfile.js', 'Gruntfile.js', that, function() { gruntfile_tpl_callback(null) } );
-         },
          function gitignore_tpl(gitignore_tpl_callback){
            that.template('_gitignore', '.gitignore', that, function() { gitignore_tpl_callback(null) } );
          },
@@ -170,20 +167,6 @@ module.exports = generators.Base.extend({
        }.bind(this))
        this.bowerInstall(props.features, done);
      }.bind(this));
-  },
-  buildGruntfile: function(){
-     var done = this.async();
-     var npmLibs = [
-       'grunt', 
-       'grunt-contrib-watch',
-       'grunt-contrib-concat',
-       'grunt-contrib-uglify',
-       'grunt-contrib-jshint',
-       'grunt-contrib-cssmin',
-//      'grunt-contrib-clean',
-       'grunt-dancer', 
-     ]
-     this.npmInstall(npmLibs, done);
   },
   
   buildDancer: function(){
@@ -288,8 +271,48 @@ module.exports = generators.Base.extend({
   }, 
   linkBower: function(){
     var done = this.async();
+    var that = this;
     console.log('linking bower...');
-    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), function(){ console.log(' linked successfully' ), done()} );
+    bower_linker(path.join(this.destinationRoot(), 'static', 'vendor'), function(links){ that.installed_links = links; console.log(' linked successfully' ), done()} );
+  },
+  runNPM: function(){
+     var done = this.async();
+     var that = this;
+     var templateSettings = {
+          'evaluate'    : /\{\{(.+?)\}\}/g,
+          'interpolate'    : /\{\{=(.+?)\}\}/g,
+          'escape'    : /\{\{-(.+?)\}\}/g,
+     };
+     var npmLibs = [
+       'grunt', 
+       'grunt-contrib-watch',
+       'grunt-contrib-concat',
+       'grunt-contrib-uglify',
+       'grunt-contrib-jshint',
+       'grunt-contrib-cssmin',
+//      'grunt-contrib-clean',
+       'grunt-dancer', 
+     ]
+     var grunt_ctx = {
+       js : JSON.stringify(assets_sorter.js(this.installed_links.js))
+     };
+     async.waterfall([
+       function gruntfile_tpl(gruntfile_tpl_callback){
+         that.template('_Gruntfile.js', 'Gruntfile.js', grunt_ctx, templateSettings, function(){ gruntfile_tpl_callback(null) } ); 
+       },
+       function npmInstall(npmInstall_callback){
+         that.npmInstall(npmLibs, function(){ npmInstall_callback(null); });
+       }
+     ], 
+     function(err){
+       if (err){
+         console.log('ERROR: Error building Gruntfile');
+         console.log('ERROR: '+err.toString());
+         process.exit(1);
+       }
+       done();
+       return;
+     })
   },
   check: function () {
     console.log(this.options);

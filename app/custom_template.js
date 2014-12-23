@@ -33,7 +33,7 @@ module.exports = test = function (sourcePath, destinationPath){
           });
         },
         function process(data, process_callback){
-           if (options) _.templateSettings = options
+           if (options && options !== {}) _.templateSettings = options
            var compile = _.template(data);
            var newdata = compile(context)
            process_callback(null, newdata);
